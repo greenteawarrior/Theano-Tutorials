@@ -12,9 +12,14 @@ def floatX(X):
 def init_weights(shape):
     return theano.shared(floatX(np.random.randn(*shape) * 0.01))
 
+# inputs below 0, rectifier does nothing
+# inputs above 0, rectifier does something
+# helps clean up the things
 def rectify(X):
     return T.maximum(X, 0.)
 
+# numerically stable softmax
+# b/c it might explode with theano's default thing
 def softmax(X):
     e_x = T.exp(X - X.max(axis=1).dimshuffle(0, 'x'))
     return e_x / e_x.sum(axis=1).dimshuffle(0, 'x')
@@ -23,22 +28,30 @@ def RMSprop(cost, params, lr=0.001, rho=0.9, epsilon=1e-6):
     grads = T.grad(cost=cost, wrt=params)
     updates = []
     for p, g in zip(params, grads):
-        acc = theano.shared(p.get_value() * 0.)
+        acc = theano.shared(p.get_value() * 0.) # a running average of the magnitude of the gradient
         acc_new = rho * acc + (1 - rho) * g ** 2
+
+        # scale the gradient based on running average
         gradient_scaling = T.sqrt(acc_new + epsilon)
         g = g / gradient_scaling
         updates.append((acc, acc_new))
         updates.append((p, p - lr * g))
     return updates
 
+# augmentation - moving pixels around, to get more data
+# helps a lot with overfitting
+# injecting noise 
+# makes your model to be much more robust, and hidden values will not flake out on you 
+# noise helps with exploration and changing
 def dropout(X, p=0.):
     if p > 0:
         retain_prob = 1 - p
-        X *= srng.binomial(X.shape, p=retain_prob, dtype=theano.config.floatX)
-        X /= retain_prob
+        X *= srng.binomial(X.shape, p=retain_prob, dtype=theano.config.floatX) # randomly drop values and scale the rest
+        X /= retain_prob # housekeeping: scale the reamining things since they dropped out
     return X
 
 def model(X, w_h, w_h2, w_o, p_drop_input, p_drop_hidden):
+    # noise injected into model, rectifiers now used, 2 hidden layers
     X = dropout(X, p_drop_input)
     h = rectify(T.dot(X, w_h))
 
@@ -74,3 +87,6 @@ for i in range(100):
         cost = train(trX[start:end], trY[start:end])
     print np.mean(np.argmax(teY, axis=1) == predict(teX))
 
+# so... we're seeing stroke detectors and prototypes
+# see on the vicusliazations... blue things. way more sparse (good)
+# can describe the digits with a few "units" (i.e. features? diagonal thing, horizontal thing, vertical thing)

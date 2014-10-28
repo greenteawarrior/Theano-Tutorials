@@ -41,6 +41,7 @@ def RMSprop(cost, params, lr=0.001, rho=0.9, epsilon=1e-6):
     return updates
 
 def model(X, w, w2, w3, w4, p_drop_conv, p_drop_hidden):
+    # a block of computation conv -> activate -> pool -> noise
     l1a = rectify(conv2d(X, w, border_mode='full'))
     l1 = max_pool_2d(l1a, (2, 2))
     l1 = dropout(l1, p_drop_conv)
@@ -51,7 +52,7 @@ def model(X, w, w2, w3, w4, p_drop_conv, p_drop_hidden):
 
     l3a = rectify(conv2d(l2, w3))
     l3b = max_pool_2d(l3a, (2, 2))
-    l3 = T.flatten(l3b, outdim=2)
+    l3 = T.flatten(l3b, outdim=2) # convert from 4tensor to normal matrix
     l3 = dropout(l3, p_drop_conv)
 
     l4 = rectify(T.dot(l3, w4))
@@ -62,12 +63,15 @@ def model(X, w, w2, w3, w4, p_drop_conv, p_drop_hidden):
 
 trX, teX, trY, teY = mnist(onehot=True)
 
+# reshape into 4tensor (b, c, 0, 1) format 
 trX = trX.reshape(-1, 1, 28, 28)
 teX = teX.reshape(-1, 1, 28, 28)
 
 X = T.ftensor4()
 Y = T.fmatrix()
 
+# 3x3 is the smallest notion of a grid with left, right, up, down, middle...
+# just use more layers, smaller channels --> some nice feature regularization as a byproduct
 w = init_weights((32, 1, 3, 3))
 w2 = init_weights((64, 32, 3, 3))
 w3 = init_weights((128, 64, 3, 3))
@@ -83,7 +87,10 @@ cost = T.mean(T.nnet.categorical_crossentropy(noise_py_x, Y))
 params = [w, w2, w3, w4, w_o]
 updates = RMSprop(cost, params, lr=0.001)
 
+# noise during training
 train = theano.function(inputs=[X, Y], outputs=cost, updates=updates, allow_input_downcast=True)
+
+# no noise when predicting
 predict = theano.function(inputs=[X], outputs=y_x, allow_input_downcast=True)
 
 for i in range(100):

@@ -1,0 +1,43 @@
+Questions:
+1. Can you explain how long it'll "drop out" input values? Won't the dataset get really small eventually? (probably just a housekeeping detail that you glossed over)
+2. So... is the neural net essentially figuring out what are good features to detect/track? 
+
+
+Cool stuff:
+Visualizations of things via TSNE (all the dimensions --> visualize-able dimensions)
+TSNE moved around the clusters, but the position on the plot doesn't have a lot of meaning?
+Different clusters for each #
+
+Why are multiple layers important?
+Trying to do better at disentangling (pulling apart?) the input
+With more layers, less "contamination" in clusters - better separation is good
+
+
+Convolutional neural networks:
+
+Before: take a 28x28 image, and destroy the inherent structure in it...
+But... what if we could do something more "respectful" of the data? This is what CNNs do
+Cascading things across input, learning a new representation
+Kernels and kernels
+Convolutions of learned kernels
+
+Some tricks for good results:
+Noise is important for regularization
+Rectifiers for faster, better, learning
+Don't use SGD - lots of cheap simple improvements
+
+
+Models need room to compute
+    It's not just one step.
+
+If your data has structure, your model should respect that
+
+Images: convolutional?
+Text; recurrent/recursal?
+
+
+Some heuristics for choosing ML models:
+    Have model be aware of structure present in data
+        
+Idea with Luke XD SIVML - Self Improvement via Machine Learning
+"improve your writing"

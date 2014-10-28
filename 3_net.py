@@ -11,6 +11,7 @@ def floatX(X):
 def init_weights(shape):
     return theano.shared(floatX(np.random.randn(*shape) * 0.01))
 
+# stochastic gradient descent
 def sgd(cost, params, lr=0.05):
     grads = T.grad(cost=cost, wrt=params)
     updates = []
@@ -18,6 +19,9 @@ def sgd(cost, params, lr=0.05):
         updates.append([p, p - g * lr])
     return updates
 
+# 2 layers of computation
+# input -> hidden (sigmoid)
+# hidden -> output (softmax)
 def model(X, w_h, w_o):
     h = T.nnet.sigmoid(T.dot(X, w_h))
     pyx = T.nnet.softmax(T.dot(h, w_o))
@@ -46,3 +50,6 @@ for i in range(100):
         cost = train(trX[start:end], trY[start:end])
     print np.mean(np.argmax(teY, axis=1) == predict(teX))
 
+# b/c it's with a traditional neural network... and hidden networks... 
+# they're all being jointly optimized
+# the hidden matrices depicted by the blue/red/green things
